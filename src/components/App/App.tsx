@@ -1,33 +1,42 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Toaster } from "react-hot-toast";
-import SearchBar from "./components/SearchBar/SearchBar";
-import ImageGallery from "./components/ImageGallery/ImageGallery";
-import Loader from "./components/Loader/Loader";
-import ErrorMessage from "./components/ErrorMessage/ErrorMessage";
-import LoadMoreBtn from "./components/LoadMoreBtn/LoadMoreBtn";
-import ImageModal from "./components/ImageModale/ImageModale";
+import SearchBar from "../SearchBar/SearchBar";
+import ImageGallery from "../ImageGallery/ImageGallery";
+import Loader from "../Loader/Loader";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
+import LoadMoreBtn from "../LoadMoreBtn/LoadMoreBtn";
+import ImageModal from "../ImageModale/ImageModale";
+import { UnsplashImage } from "../../types/unsplash";
+
+interface UnsplashApiResponse {
+  results: UnsplashImage[];
+  total_pages: number;
+}
 
 function App() {
-  const [query, setQuery] = useState("");
-  const [images, setImages] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [query, setQuery] = useState<string>("");
+  const [images, setImages] = useState<UnsplashImage[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<UnsplashImage | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const accessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+
   useEffect(() => {
     if (!query) return;
 
-    const fetchImages = async () => {
+    const fetchImages = async (): Promise<void> => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await axios.get(
+        const response = await axios.get<UnsplashApiResponse>(
           "https://api.unsplash.com/search/photos",
           {
             params: {
@@ -48,7 +57,8 @@ function App() {
 
         setTotalPages(response.data.total_pages);
       } catch (err) {
-        if (err.response?.status === 401) {
+        const axiosError = err as AxiosError;
+        if (axiosError.response?.status === 401) {
           setError("Invalid API key. Please check your configuration.");
         } else {
           setError("Failed to fetch images. Please try again later.");
@@ -61,23 +71,23 @@ function App() {
     fetchImages();
   }, [query, page, accessKey]);
 
-  const handleSearch = (newQuery) => {
+  const handleSearch = (newQuery: string): void => {
     if (newQuery === query) return;
     setQuery(newQuery);
     setPage(1);
     setImages([]);
   };
 
-  const handleLoadMore = () => {
+  const handleLoadMore = (): void => {
     setPage((prevPage) => prevPage + 1);
   };
 
-  const openModal = (image) => {
+  const openModal = (image: UnsplashImage): void => {
     setSelectedImage(image);
     setIsModalOpen(true);
   };
 
-  const closeModal = () => {
+  const closeModal = (): void => {
     setSelectedImage(null);
     setIsModalOpen(false);
   };
@@ -94,7 +104,6 @@ function App() {
       {images.length > 0 && page < totalPages && !loading && (
         <LoadMoreBtn onClick={handleLoadMore} />
       )}
-
       <ImageModal
         isOpen={isModalOpen}
         onRequestClose={closeModal}

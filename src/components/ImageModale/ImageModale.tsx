@@ -1,8 +1,15 @@
 import Modal from "react-modal";
 import styles from "./ImageModale.module.css";
 import { IoIosCloseCircleOutline } from "react-icons/io";
+import { UnsplashImage } from "../../types/unsplash";
 
-function ImageModal({ isOpen, onRequestClose, image }) {
+interface ImageModalProps {
+  isOpen: boolean;
+  onRequestClose: () => void;
+  image: UnsplashImage | null;
+}
+
+function ImageModal({ isOpen, onRequestClose, image }: ImageModalProps) {
   if (!image) return null;
 
   return (
@@ -16,7 +23,7 @@ function ImageModal({ isOpen, onRequestClose, image }) {
     >
       <img
         src={image.urls.regular}
-        alt={image.alt_description}
+        alt={image.alt_description || "Unsplash image"}
         className={styles.image}
       />
       <div className={styles.info}>
